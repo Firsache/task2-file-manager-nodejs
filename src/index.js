@@ -1,5 +1,7 @@
 import readline from "readline";
 import os from "os";
+import { upDir } from "./cd/upDir.js";
+import { changeDir } from "./cd/changeDir.js";
 
 const readLine = readline.createInterface({
   input: process.stdin,
@@ -8,6 +10,7 @@ const readLine = readline.createInterface({
 });
 
 const homeDir = os.homedir();
+let currentDir = homeDir;
 
 const args = process.argv.filter((arg) => arg.startsWith("--username="));
 const defaultName = args[0].replace("--username=", " ").trim();
@@ -33,18 +36,42 @@ const commands = {
     readLine.close();
     process.exit();
   },
+  async cd(args) {
+    console.log(args);
+    const newDir = await changeDir(args[0]);
+    // process.chdir(parentPath);
+    currentDir = newDir;
+  },
+  async up() {
+    const parentDir = await upDir(currentDir);
+    console.log(parentDir);
+    // currentDir = parentDir;
+  },
+  ls() {
+    // вывести содержимое папки
+  },
 };
 
 readLine.prompt();
 readLine.on("line", (str) => {
   str = str.trim();
-  const currentDir = "need to find it";
+  console.log(`str ${str}`);
 
-  const command = commands[str];
-  if (command) {
+  const [commandName, ...inputArgs] = str.split(" ");
+  //   console.log(`commandName ${commandName}`);
+  //   console.log(`inputArgs ${inputArgs}`);
+
+  const command = commands[commandName];
+  if (command && !inputArgs.length) {
     command();
+    // currentDir = process.cwd();
     console.log(`You are currently in ${currentDir}`);
-  } else console.log("Operation failed");
+    readLine.prompt();
+  } else if (command && inputArgs.length) {
+    command(inputArgs);
+    console.log(`You are currently in ${currentDir}`);
+    readLine.prompt();
+  } else console.log("Invalid input");
 });
 
 readLine.on("SIGINT", () => {
