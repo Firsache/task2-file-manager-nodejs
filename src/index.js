@@ -13,7 +13,11 @@ const homeDir = os.homedir();
 let currentDir = homeDir;
 
 const args = process.argv.filter((arg) => arg.startsWith("--username="));
-const defaultName = args[0].replace("--username=", " ").trim();
+
+const defaultName =
+  args.length > 0
+    ? args[0].replace("--username=", " ").trim()
+    : "AnonymousDeveloper";
 
 const userName =
   args.length > 1
@@ -39,13 +43,14 @@ const commands = {
   async cd(args) {
     console.log(args);
     const newDir = await changeDir(args[0]);
+    // console.log(newDir);
     // process.chdir(parentPath);
     currentDir = newDir;
   },
-  async up() {
-    const parentDir = await upDir(currentDir);
+  up() {
+    const parentDir = upDir(currentDir);
     console.log(parentDir);
-    // currentDir = parentDir;
+    currentDir = parentDir;
   },
   ls() {
     // вывести содержимое папки
@@ -55,7 +60,7 @@ const commands = {
 readLine.prompt();
 readLine.on("line", (str) => {
   str = str.trim();
-  console.log(`str ${str}`);
+  // console.log(`str ${str}`);
 
   const [commandName, ...inputArgs] = str.split(" ");
   //   console.log(`commandName ${commandName}`);
@@ -64,7 +69,8 @@ readLine.on("line", (str) => {
   const command = commands[commandName];
   if (command && !inputArgs.length) {
     command();
-    // currentDir = process.cwd();
+    // const curDir = process.cwd();
+    // console.log(curDir);
     console.log(`You are currently in ${currentDir}`);
     readLine.prompt();
   } else if (command && inputArgs.length) {
