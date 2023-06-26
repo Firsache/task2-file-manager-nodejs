@@ -1,18 +1,20 @@
 import path from "node:path";
 import fs from "node:fs";
 
-export function upDir(currentDir) {
+export const upDir = (currentDir) => {
   const pathTo = path.resolve(path.dirname(currentDir));
-  console.log(`pathTo: ${pathTo}`);
+  const isRootDir = currentDir.split("\\");
+  const parentDir = isRootDir.length > 1 ? pathTo : currentDir;
 
-  fs.stat(pathTo, (err, stats) => {
-    if (err) throw err;
+  return new Promise((resolve, reject) => {
+    fs.stat(parentDir, (err, stats) => {
+      if (err) reject(err);
 
-    if (stats.isDirectory()) {
-      console.log("TRUE");
-      return pathTo;
-    } else {
-      console.log("Operation failed");
-    }
+      if (stats.isDirectory()) {
+        resolve(parentDir);
+      } else {
+        reject("Operation failed");
+      }
+    });
   });
-}
+};

@@ -2,6 +2,7 @@ import readline from "readline";
 import os from "os";
 import { upDir } from "./cd/upDir.js";
 import { changeDir } from "./cd/changeDir.js";
+import { getList } from "./cd/list.js";
 
 const readLine = readline.createInterface({
   input: process.stdin,
@@ -30,36 +31,42 @@ const welcome = (userName) => {
 };
 const buy = (userName) => {
   console.log(`Thank you for using File Manager, ${userName}, goodbye!`);
+  readLine.close();
+  process.exit();
 };
 
 welcome(userName);
 
 const commands = {
-  exit() {
-    buy(userName);
-    readLine.close();
-    process.exit();
-  },
   async cd(args) {
-    console.log(args);
-    const newDir = await changeDir(args[0]);
-    // console.log(newDir);
-    // process.chdir(parentPath);
-    currentDir = newDir;
+    try {
+      const newDir = await changeDir(currentDir, args[0]);
+      console.log("changed", newDir);
+      currentDir = newDir;
+    } catch (error) {
+      console.error(error);
+    }
   },
-  up() {
-    const parentDir = upDir(currentDir);
-    console.log(parentDir);
-    currentDir = parentDir;
+  async up() {
+    try {
+      const parentDir = await upDir(currentDir);
+      currentDir = parentDir;
+    } catch (error) {
+      console.error(error);
+    }
   },
-  ls() {
-    // вывести содержимое папки
+  async ls() {
+    const tableOfFiles = await getList(currentDir);
+    console.table(tableOfFiles);
   },
 };
 
 readLine.prompt();
-readLine.on("line", (str) => {
+readLine.on("line", async (str) => {
   str = str.trim();
+  if (str.toLowerCase() === ".exit") {
+    buy(userName);
+  }
   // console.log(`str ${str}`);
 
   const [commandName, ...inputArgs] = str.split(" ");
@@ -67,14 +74,8 @@ readLine.on("line", (str) => {
   //   console.log(`inputArgs ${inputArgs}`);
 
   const command = commands[commandName];
-  if (command && !inputArgs.length) {
-    command();
-    // const curDir = process.cwd();
-    // console.log(curDir);
-    console.log(`You are currently in ${currentDir}`);
-    readLine.prompt();
-  } else if (command && inputArgs.length) {
-    command(inputArgs);
+  if (command) {
+    await command(inputArgs);
     console.log(`You are currently in ${currentDir}`);
     readLine.prompt();
   } else console.log("Invalid input");
@@ -82,6 +83,4 @@ readLine.on("line", (str) => {
 
 readLine.on("SIGINT", () => {
   buy(userName);
-  readLine.close();
-  process.exit();
 });
