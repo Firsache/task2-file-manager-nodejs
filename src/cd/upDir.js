@@ -3,7 +3,13 @@ import fs from "node:fs";
 
 export const upDir = (currentDir) => {
   const pathTo = path.resolve(path.dirname(currentDir));
-  const isRootDir = currentDir.split("\\");
+  let isRootDir = "";
+  if (currentDir.includes("\\")) {
+    isRootDir = currentDir.split("\\");
+  } else {
+    isRootDir = currentDir.split("/");
+  }
+
   const parentDir = isRootDir.length > 1 ? pathTo : currentDir;
 
   return new Promise((resolve, reject) => {

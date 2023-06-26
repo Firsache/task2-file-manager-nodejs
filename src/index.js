@@ -3,6 +3,14 @@ import os from "os";
 import { upDir } from "./cd/upDir.js";
 import { changeDir } from "./cd/changeDir.js";
 import { getList } from "./cd/list.js";
+import { readContent } from "./files/read.js";
+import { addFile } from "./files/addFile.js";
+import { renameFile } from "./files/renameFile.js";
+import { copyFile } from "./files/copyFile.js";
+import { moveFile } from "./files/moveFile.js";
+import { deleteFile } from "./files/deleteFile.js";
+import { osOperations } from "./os/os.js";
+import { hashFile } from "./hash/hash.js";
 
 const readLine = readline.createInterface({
   input: process.stdin,
@@ -29,7 +37,7 @@ const welcome = (userName) => {
   console.log(`Welcome to the File Manager, ${userName}!`);
   console.log(`You are currently in ${homeDir}`);
 };
-const buy = (userName) => {
+const bye = (userName) => {
   console.log(`Thank you for using File Manager, ${userName}, goodbye!`);
   readLine.close();
   process.exit();
@@ -41,7 +49,6 @@ const commands = {
   async cd(args) {
     try {
       const newDir = await changeDir(currentDir, args[0]);
-      console.log("changed", newDir);
       currentDir = newDir;
     } catch (error) {
       console.error(error);
@@ -59,19 +66,40 @@ const commands = {
     const tableOfFiles = await getList(currentDir);
     console.table(tableOfFiles);
   },
+  async cat([filePath]) {
+    await readContent(filePath);
+  },
+  async add([fileName]) {
+    await addFile(fileName);
+  },
+  async rn([filePath, newName]) {
+    await renameFile(filePath, newName, currentDir);
+  },
+  async cp([oldFilePath, newFilePath]) {
+    await copyFile(oldFilePath, newFilePath);
+  },
+  async mv([oldFilePath, newFilePath]) {
+    await moveFile(oldFilePath, newFilePath);
+  },
+  async rm([pathToDel]) {
+    await deleteFile(pathToDel);
+  },
+  async os(args) {
+    await osOperations(args);
+  },
+  async hash([filePath]) {
+    await hashFile(filePath);
+  },
 };
 
 readLine.prompt();
 readLine.on("line", async (str) => {
   str = str.trim();
   if (str.toLowerCase() === ".exit") {
-    buy(userName);
+    bye(userName);
   }
-  // console.log(`str ${str}`);
 
   const [commandName, ...inputArgs] = str.split(" ");
-  //   console.log(`commandName ${commandName}`);
-  //   console.log(`inputArgs ${inputArgs}`);
 
   const command = commands[commandName];
   if (command) {
@@ -82,5 +110,5 @@ readLine.on("line", async (str) => {
 });
 
 readLine.on("SIGINT", () => {
-  buy(userName);
+  bye(userName);
 });
